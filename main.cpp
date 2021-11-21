@@ -455,21 +455,40 @@ int strpos4(const char *src, const char *sub) {
         return i - temp_sub_pos;
 }
 
-void strdel1(char *dest, char *src, int k, int p) {
-    strcpy(dest, src);
-    memmove(dest + k, dest + k + p, strlen(dest) - k - p + 1);
+void convertVarArgIntoVector(vector<const char *> &dest, const char *varargs, ...) {
+    vector<char *> res;
+    va_list args;
+    va_start(args, varargs);
+
+    while (*varargs != '\0') {
+        auto i = va_arg(args, const char *);
+        dest.push_back(i);
+        printf("%s", i);
+        ++varargs;
+    }
+
+    va_end(args);
 }
 
-void strdel2(char *dest, char *src, int k, int p) {
-    strcpy(dest, src);
+char *strcat1(int k, ...) {
+    va_list args;
+    va_start(args, k);
 
-    char *s = dest + k + p;
-    char *dest_ptr = dest + k;
+    auto result = new char[500];
+    int result_pos = 0;
 
-    while (*s)
-        *dest_ptr++ = *s++;
+    while (true) {
+        auto i = va_arg(args, char *);
+        if (i == nullptr)
+            break;
 
-    *dest_ptr = 0;
+        while (*i != '\0')
+            result[result_pos++] = *i++;
+    }
+
+    va_end(args);
+
+    return result;
 }
 
 
@@ -856,6 +875,7 @@ int main() {
 
             printf("6. Объединение нескольких строк в одну строку. (strdel).\n");
 
+            printf("%s", strcat1(5, (char *) "niggers", "are", "lmao", "lol", "kek"));
 //            printf("%s\n", strcat1(4, "213", "213", "213", "213"));
 
         } else
