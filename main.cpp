@@ -474,10 +474,10 @@ char *strcat1(int k, ...) {
     va_list args;
     va_start(args, k);
 
-    auto result = new char[500];
+    auto result = new char[1000];
     int result_pos = 0;
 
-    while (true) {
+    for (int j = 0; j < k; j++) {
         auto i = va_arg(args, char *);
         if (i == nullptr)
             break;
@@ -485,6 +485,58 @@ char *strcat1(int k, ...) {
         while (*i != '\0')
             result[result_pos++] = *i++;
     }
+
+    result[result_pos] = '\0';
+
+    va_end(args);
+
+    return result;
+}
+
+char *strcat2(int k, ...) {
+    va_list args;
+    va_start(args, k);
+
+    auto result = new char[1000];
+    int result_pos = 0;
+
+    while (k--) {
+        char *i;
+        i = va_arg(args, char *);
+
+        if (i == nullptr)
+            break;
+
+        while (*i != '\0')
+            result[result_pos++] = *i++;
+    }
+
+    result[result_pos] = '\0';
+
+    va_end(args);
+
+    return result;
+}
+
+char *strcat3(int k, ...) {
+    va_list args;
+    va_start(args, k);
+
+    auto result = new char[1000];
+    int result_pos = 0;
+
+    while (true) {
+        char *i;
+        i = va_arg(args, char *);
+
+        if (i == nullptr)
+            break;
+
+        while (*i != '\0')
+            result[result_pos++] = *i++;
+    }
+
+    result[result_pos] = '\0';
 
     va_end(args);
 
@@ -875,7 +927,9 @@ int main() {
 
             printf("6. Объединение нескольких строк в одну строку. (strdel).\n");
 
-            printf("%s", strcat1(5, (char *) "niggers", "are", "lmao", "lol", "kek"));
+            printf("%s\n", strcat1(5, (char *) "niggers", "are", "lmao", "lol", "kek\0 \0"));
+            printf("%s\n", strcat2(5, (char *) "niggers", "are", "lmao", "lol", "kek\0 \0"));
+            printf("%s\n", strcat3(5, (char *) "niggers", "are", "lmao", "lol", "kek\0 \0"));
 //            printf("%s\n", strcat1(4, "213", "213", "213", "213"));
 
         } else
