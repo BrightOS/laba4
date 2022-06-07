@@ -115,7 +115,8 @@ static char *substr(const char *string, int position, int length) {
 
 static size_t strlen1(const char *s) {
     size_t result = 0;
-    while (*s++) result++;
+    int i = 0;
+    while (s[i++]) result++;
     return result;
 }
 
@@ -455,30 +456,22 @@ int strpos4(const char *src, const char *sub) {
         return i - temp_sub_pos;
 }
 
-void convertVarArgIntoVector(vector<const char *> &dest, const char *varargs, ...) {
-    vector<char *> res;
-    va_list args;
-    va_start(args, varargs);
 
-    while (*varargs != '\0') {
-        auto i = va_arg(args, const char *);
-        dest.push_back(i);
-        printf("%s", i);
-        ++varargs;
-    }
+/**
+ * Четыре функции, позволяющие объединить
+ * несколько строк в одну
+ * @param k кол-во строк;
+ * @param ... строки;
+ * @return итоговая строка.
+ */
 
-    va_end(args);
-}
-
-char *strcat1(int k, ...) {
-    va_list args;
-    va_start(args, k);
+char *strcat1(int k, va_list list) {
 
     auto result = new char[1000];
     int result_pos = 0;
 
     for (int j = 0; j < k; j++) {
-        auto i = va_arg(args, char *);
+        auto i = va_arg(list, char *);
         if (i == nullptr)
             break;
 
@@ -488,21 +481,17 @@ char *strcat1(int k, ...) {
 
     result[result_pos] = '\0';
 
-    va_end(args);
-
     return result;
 }
 
-char *strcat2(int k, ...) {
-    va_list args;
-    va_start(args, k);
+char *strcat2(int k, va_list list) {
 
     auto result = new char[1000];
     int result_pos = 0;
 
     while (k--) {
         char *i;
-        i = va_arg(args, char *);
+        i = va_arg(list, char *);
 
         if (i == nullptr)
             break;
@@ -513,36 +502,67 @@ char *strcat2(int k, ...) {
 
     result[result_pos] = '\0';
 
-    va_end(args);
-
     return result;
 }
 
-char *strcat3(int k, ...) {
-    va_list args;
-    va_start(args, k);
+char *strcat3(int k, va_list list) {
 
-    auto result = new char[1000];
-    int result_pos = 0;
+    char *result = new char[1000];
+    char *temp = result;
 
-    while (true) {
+    if (k == 0) {
+        *temp = '\0';
+        return result;
+    }
+
+    k--;
+
+    do {
         char *i;
-        i = va_arg(args, char *);
+        i = va_arg(list, char *);
 
         if (i == nullptr)
             break;
 
-        while (*i != '\0')
-            result[result_pos++] = *i++;
-    }
+        while (*i)
+            *temp++ = *i++;
 
-    result[result_pos] = '\0';
-
-    va_end(args);
+        *temp = '\0';
+    } while (k--);
 
     return result;
 }
 
+char *strcat4(int k, va_list list) {
+
+    char *result = new char[1000];
+    char *temp = result;
+    char *i;
+    int i_length, temp_pos = 0, i_pos;
+
+    if (k == 0) {
+        *temp = '\0';
+        return result;
+    }
+
+    k--;
+
+    do {
+        i = va_arg(list, char *);
+        i_length = strlen(i);
+        i_pos = 0;
+
+        if (i == nullptr)
+            break;
+
+        for (int j = 0; j < i_length; j++)
+            temp[temp_pos++] = i[i_pos++];
+
+        temp[temp_pos] = '\0';
+    } while (k--);
+
+    return result;
+}
 
 /**
  * Выводит тесты всех функций strlen.
@@ -729,6 +749,56 @@ static void test_strpos(const char *src, const char *sub) {
     printf("strpos2(\"%s\", \"%s\")=%d\n", src, sub, strpos2(src, sub));
     printf("strpos3(\"%s\", \"%s\")=%d\n", src, sub, strpos3(src, sub));
     printf("strpos4(\"%s\", \"%s\")=%d\n", src, sub, strpos4(src, sub));
+
+    enter_to_continue();
+}
+
+/**
+ * Выводит тесты всех функций strcat.
+ * @param k количество строк;
+ * @param ... строки.
+ */
+static void test_strcat(int k, ...) {
+    char *input_params = new char[255];
+    char *expected_result = new char[255];
+
+    va_list args;
+
+    strcpy(input_params, "");
+    strcat(input_params, "k = ");
+    strcat(input_params, to_string(k).c_str());
+    if (k > 0)
+        strcat(input_params, ", \"");
+
+    strcpy(expected_result, "");
+
+    va_start(args, k);
+    for (int i = 0; i < k; i++) {
+        auto temp = va_arg(args, char *);
+        strcat(expected_result, temp);
+        strcat(input_params, temp);
+        if (i != k - 1)
+            strcat(input_params, "\", \"");
+        else
+            strcat(input_params, "\".");
+    }
+    va_end(args);
+
+    print_before_test(expected_result, input_params);
+    free(input_params);
+
+    va_start(args, k);
+    printf("strcat1(%d, ...)=%s\n", k, strcat1(k, args));
+    va_end(args);
+    va_start(args, k);
+    printf("strcat2(%d, ...)=%s\n", k, strcat2(k, args));
+    va_end(args);
+    va_start(args, k);
+    printf("strcat3(%d, ...)=%s\n", k, strcat3(k, args));
+    va_end(args);
+    va_start(args, k);
+    printf("strcat4(%d, ...)=%s\n", k, strcat4(k, args));
+    va_end(args);
 
     enter_to_continue();
 }
@@ -925,12 +995,17 @@ int main() {
         } else if (n == 6) {
 
 
-            printf("6. Объединение нескольких строк в одну строку. (strdel).\n");
+            printf("6. Объединение нескольких строк в одну строку. (strcat).\n");
 
-            printf("%s\n", strcat1(5, (char *) "niggers", "are", "lmao", "lol", "kek\0 \0"));
-            printf("%s\n", strcat2(5, (char *) "niggers", "are", "lmao", "lol", "kek\0 \0"));
-            printf("%s\n", strcat3(5, (char *) "niggers", "are", "lmao", "lol", "kek\0 \0"));
-//            printf("%s\n", strcat1(4, "213", "213", "213", "213"));
+            test_strcat(0);
+            test_strcat(1, "Just one");
+            test_strcat(1, "");
+            test_strcat(2, "First ", "Second");
+            test_strcat(2, "First", "");
+            test_strcat(2, "", "");
+            test_strcat(3, "Roses ", "are ", "red");
+            test_strcat(4, "But ", "violets ", "are ", "blue");
+
 
         } else
             printf("Как так вышло, что тут прошло это число?..");
